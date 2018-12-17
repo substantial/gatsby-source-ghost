@@ -3,76 +3,84 @@ const qs = require('qs');
 
 const printError = (...args) => console.error('\n', ...args); // eslint-disable-line no-console
 
-const validatePluginOptions = (options) => {
-    if (!options.clientId || !options.clientSecret || !options.apiUrl) {
+const validateOptions = ({clientId, clientSecret, apiUrl}) => {
+    if (!clientId || !clientSecret || !apiUrl) {
         printError('Plugin Configuration Missing: gatsby-source-ghost requires your apiUrl, clientId and clientSecret');
         process.exit(1);
     }
 
-    if (options.apiUrl.substring(0, 4) !== 'http') {
+    if (apiUrl.substring(0, 4) !== 'http') {
         printError('Ghost apiUrl requires a protocol, E.g. https://<yourdomain>.ghost.io');
         process.exit(1);
     }
 
-    if (options.apiUrl.substring(0, 8) !== 'https://') {
-        printError('Ghost apiUrl should be served over HTTPS, are you sure you want:', options.apiUrl, '?');
+    if (apiUrl.substring(0, 8) !== 'https://') {
+        printError('Ghost apiUrl should be served over HTTPS, are you sure you want:', apiUrl, '?');
     }
 };
 
-const buildApiConfigFromOptions = options => ({
-    baseApiUrl: `${options.apiUrl}/ghost/api/v0.1`,
-    baseApiOptions: {
-        client_id: options.clientId,
-        client_secret: options.clientSecret,
+const exitOnApiError = (err) => {
+    printError('Error:', err);
+    printError('Unable to fetch data from your Ghost API. Perhaps your credentials or apiUrl are incorrect?');
+    process.exit(1);
+};
+
+const createApiHelpers = ({clientId, clientSecret, apiUrl}) => {
+    const baseApiUrl = `${apiUrl}/ghost/api/v0.1`;
+
+    const baseApiParams = {
+        client_id: clientId,
+        client_secret: clientSecret,
         absolute_urls: true,
         limit: 'all'
-    }
-});
+    };
 
-const get = (url, successCallback) => axios.get(url)
-    .then(successCallback)
-    .catch((err) => {
-        printError('Error:', err);
-        printError('Unable to fetch data from your Ghost API. Perhaps your credentials or apiUrl are incorrect?');
-        process.exit(1);
-    });
+    const extendParams = params => Object.assign({}, baseApiParams, params);
+
+    const buildApiUrl = (endpoint, params = {}) => {
+        const query = qs.stringify(extendParams(params));
+        return `${baseApiUrl}/${endpoint}/?${query}`;
+    };
+
+    return {
+        extendParams,
+        buildApiUrl
+    };
+};
 
 module.exports.fetchAllPosts = (options) => {
-    validatePluginOptions(options);
+    validateOptions(options);
 
-    const {baseApiUrl, baseApiOptions} = buildApiConfigFromOptions(options);
-    const postApiOptions = Object.assign({}, baseApiOptions, {
+    const {buildApiUrl} = createApiHelpers(options);
+    const postsUrl = buildApiUrl('posts', {
         include: 'authors,tags',
         filter: 'page:[true,false]',
         formats: 'plaintext,html'
     });
-    const postsApiUrl = `${baseApiUrl}/posts/?${qs.stringify(postApiOptions)}`;
 
-    return get(postsApiUrl, res => res.data.posts);
+    return axios.get(postsUrl)
+        .then(res => res.data.posts)
+        .catch(exitOnApiError);
 };
 
 module.exports.fetchAllTags = (options) => {
-    validatePluginOptions(options);
+    validateOptions(options);
 
-    const {baseApiUrl, baseApiOptions} = buildApiConfigFromOptions(options);
-    const postApiOptions = Object.assign({}, baseApiOptions, {
-        absolute_urls: true,
-        limit: 'all'
-    });
-    const tagsApiUrl = `${baseApiUrl}/tags/?${qs.stringify(postApiOptions)}`;
+    const {buildApiUrl} = createApiHelpers(options);
+    const tagsUrl = buildApiUrl('tags');
 
-    return get(tagsApiUrl, res => res.data.tags);
+    return axios.get(tagsUrl)
+        .then(res => res.data.tags)
+        .catch(exitOnApiError);
 };
 
 module.exports.fetchAllUsers = (options) => {
-    validatePluginOptions(options);
+    validateOptions(options);
 
-    const {baseApiUrl, baseApiOptions} = buildApiConfigFromOptions(options);
-    const postApiOptions = Object.assign({}, baseApiOptions, {
-        absolute_urls: true,
-        limit: 'all'
-    });
-    const usersApiUrl = `${baseApiUrl}/users/?${qs.stringify(postApiOptions)}`;
+    const {buildApiUrl} = createApiHelpers(options);
+    const usersUrl = buildApiUrl('users');
 
-    return get(usersApiUrl, res => res.data.users);
+    return axios.get(usersUrl)
+        .then(res => res.data.users)
+        .catch(exitOnApiError);
 };
