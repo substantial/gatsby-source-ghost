@@ -80,4 +80,3 @@ module.exports.createNodeFactories = ({tags, users}) => {
         buildAuthorNode
     };
 };
-
