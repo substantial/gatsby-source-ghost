@@ -45,7 +45,7 @@ describe('Basic Functionality ', function () {
 
                 // Check that we get the right type of node created
                 getArg(0).internal.should.have.property('type', 'GhostPost');
-                getArg(1).internal.should.have.property('type', 'GhostPage');
+                getArg(1).internal.should.have.property('type', 'GhostPost');
                 getArg(2).internal.should.have.property('type', 'GhostTag');
                 getArg(3).internal.should.have.property('type', 'GhostTag');
                 getArg(4).internal.should.have.property('type', 'GhostAuthor');

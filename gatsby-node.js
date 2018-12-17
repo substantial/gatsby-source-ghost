@@ -11,19 +11,11 @@ exports.sourceNodes = async ({actions}, configOptions) => {
     ]).then(([posts, tags, users]) => {
         const {
             buildPostNode,
-            buildPageNode,
             buildTagNode,
             buildAuthorNode
         } = createNodeFactories({posts, tags, users});
 
-        posts
-            .filter(p => !p.page)
-            .forEach(post => createNode(buildPostNode(post)));
-
-        posts
-            .filter(p => p.page)
-            .forEach(page => createNode(buildPageNode(page)));
-
+        posts.forEach(post => createNode(buildPostNode(post)));
         tags.forEach(tag => createNode(buildTagNode(tag)));
         users.forEach(user => createNode(buildAuthorNode(user)));
     });

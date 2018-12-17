@@ -8,7 +8,6 @@ const {
 });
 
 const POST = 'Post';
-const PAGE = 'Page';
 const TAG = 'Tag';
 const AUTHOR = 'Author';
 
@@ -72,13 +71,11 @@ module.exports.createNodeFactories = ({tags, users}) => {
     };
 
     const buildPostNode = createNodeFactory(POST, postNodeMiddleware);
-    const buildPageNode = createNodeFactory(PAGE, postNodeMiddleware);
     const buildTagNode = createNodeFactory(TAG);
     const buildAuthorNode = createNodeFactory(AUTHOR);
 
     return {
         buildPostNode,
-        buildPageNode,
         buildTagNode,
         buildAuthorNode
     };
