@@ -1,29 +1,30 @@
 const GhostAPI = require('./api');
-const {PostNode, PageNode, TagNode, AuthorNode} = require('./nodes');
+const {createNodeFactories} = require('./nodes');
 
-exports.sourceNodes = async ({boundActionCreators}, configOptions) => {
-    const {createNode} = boundActionCreators;
-
+exports.sourceNodes = async ({actions}, configOptions) => {
+    const {createNode} = actions;
 
     return Promise.all([
         GhostAPI.fetchAllPosts(configOptions),
         GhostAPI.fetchAllTags(configOptions),
         GhostAPI.fetchAllUsers(configOptions)
     ]).then(([posts, tags, users]) => {
-        posts.filter(p => p.page).forEach((page) => {
-            createNode(PageNode(page));
-        });
+        const {
+            buildPostNode,
+            buildPageNode,
+            buildTagNode,
+            buildAuthorNode
+        } = createNodeFactories({posts, tags, users});
 
-        posts.filter(p => !p.page).forEach((post) => {
-            createNode(PostNode(post));
-        });
+        posts
+            .filter(p => !p.page)
+            .forEach(post => createNode(buildPostNode(post)));
 
-        tags.forEach((tag) => {
-            createNode(TagNode(tag));
-        });
+        posts
+            .filter(p => p.page)
+            .forEach(page => createNode(buildPageNode(page)));
 
-        users.forEach((user) => {
-            createNode(AuthorNode(user));
-        });
+        tags.forEach(tag => createNode(buildTagNode(tag)));
+        users.forEach(user => createNode(buildAuthorNode(user)));
     });
 };
