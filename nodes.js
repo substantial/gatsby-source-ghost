@@ -1,15 +1,48 @@
 const createNodeHelpers = require('gatsby-node-helpers').default;
+const {createRemoteFileNode} = require('gatsby-source-filesystem');
 
+const TYPE_PREFIX = 'Ghost';
 const {
     createNodeFactory,
     generateNodeId
 } = createNodeHelpers({
-    typePrefix: 'Ghost'
+    typePrefix: TYPE_PREFIX
 });
 
 const POST = 'Post';
 const TAG = 'Tag';
 const AUTHOR = 'Author';
+const MEDIA = 'Media';
+
+async function downloadImageAndCreateFileNode(
+    {url},
+    {createNode, createNodeId, touchNode, store, cache},
+) {
+    let fileNodeID;
+
+    const mediaDataCacheKey = `${TYPE_PREFIX}__Media__${url}`;
+    const cacheMediaData = await cache.get(mediaDataCacheKey);
+
+    if (cacheMediaData) {
+        fileNodeID = cacheMediaData.fileNodeID;
+        touchNode({nodeId: fileNodeID});
+        return fileNodeID;
+    }
+
+    const fileNode = await createRemoteFileNode({
+        url,
+        store,
+        cache,
+        createNode,
+        createNodeId
+    });
+
+    if (fileNode) {
+        fileNodeID = fileNode.id;
+        await cache.set(mediaDataCacheKey, {fileNodeID});
+        return fileNodeID;
+    }
+}
 
 function mapPostToTags(post, tags) {
     const postHasTags = post.tags && Array.isArray(post.tags) && post.tags.length;
@@ -63,20 +96,62 @@ function mapPostToUsers(post, users) {
     }
 }
 
-module.exports.createNodeFactories = ({tags, users}) => {
+async function mapImagesToMedia(node) {
+    if (node.feature_image) {
+        node.feature_image___NODE = generateNodeId(MEDIA, node.feature_image);
+        delete node.feature_image;
+    }
+
+    if (node.profile_image) {
+        node.profile_image___NODE = generateNodeId(MEDIA, node.profile_image);
+        delete node.profile_image;
+    }
+
+    if (node.cover_image) {
+        node.cover_image___NODE = generateNodeId(MEDIA, node.cover_image);
+        delete node.cover_image;
+    }
+}
+
+async function createLocalFileFromMedia(node, imageArgs) {
+    node.localFile___NODE = await downloadImageAndCreateFileNode(
+        {url: node.src.split('?')[0]},
+        imageArgs
+    );
+}
+
+module.exports.createNodeFactories = ({tags, users}, imageArgs) => {
     const postNodeMiddleware = (node) => {
         mapPostToTags(node, tags);
         mapPostToUsers(node, users);
+        mapImagesToMedia(node);
+        return node;
+    };
+
+    const tagNodeMiddleware = (node) => {
+        mapImagesToMedia(node);
+        return node;
+    };
+
+    const authorNodeMiddleware = (node) => {
+        mapImagesToMedia(node);
+        return node;
+    };
+
+    const mediaNodeMiddleware = async (node) => {
+        await createLocalFileFromMedia(node, imageArgs);
         return node;
     };
 
     const buildPostNode = createNodeFactory(POST, postNodeMiddleware);
-    const buildTagNode = createNodeFactory(TAG);
-    const buildAuthorNode = createNodeFactory(AUTHOR);
+    const buildTagNode = createNodeFactory(TAG, tagNodeMiddleware);
+    const buildAuthorNode = createNodeFactory(AUTHOR, authorNodeMiddleware);
+    const buildMediaNode = createNodeFactory(MEDIA, mediaNodeMiddleware);
 
     return {
         buildPostNode,
         buildTagNode,
-        buildAuthorNode
+        buildAuthorNode,
+        buildMediaNode
     };
 };
