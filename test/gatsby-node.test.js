@@ -1,7 +1,6 @@
 // Switch these lines once there are useful utils
 // const testUtils = require('./utils');
 require('./utils');
-const sandbox = sinon.createSandbox();
 
 // Thing we are testing
 const gatsbyNode = require('../gatsby-node');
@@ -9,14 +8,14 @@ const GhostAPI = require('../api');
 
 describe('Basic Functionality ', function () {
     afterEach(() => {
-        sandbox.restore();
+        sinon.restore();
     });
 
     it('Gatsby Node does roughly the right thing', function (done) {
-        const createNode = sandbox.stub();
+        const createNode = sinon.stub();
 
         // Pass in some fake data
-        sandbox.stub(GhostAPI, 'fetchAllPosts').resolves([
+        sinon.stub(GhostAPI, 'fetchAllPosts').resolves([
             {slug: 'welcome-to-ghost', page: false, tags: [
                 {slug: 'getting-started'},
                 {slug: 'hash-feature-img'}
@@ -27,8 +26,18 @@ describe('Basic Functionality ', function () {
             {slug: 'about', page: true}
         ]);
 
+        sinon.stub(GhostAPI, 'fetchAllTags').resolves([
+            {slug: 'getting-started'},
+            {slug: 'hash-feature-img'}
+        ]);
+
+        sinon.stub(GhostAPI, 'fetchAllUsers').resolves([
+            {name: 'Ghost Writer'},
+            {name: 'Ghost Author'}
+        ]);
+
         gatsbyNode
-            .sourceNodes({boundActionCreators: {createNode}}, {})
+            .sourceNodes({actions: {createNode}}, {})
             .then(() => {
                 createNode.callCount.should.eql(6);
 
@@ -36,11 +45,11 @@ describe('Basic Functionality ', function () {
 
                 // Check that we get the right type of node created
                 getArg(0).internal.should.have.property('type', 'GhostPost');
-                getArg(1).internal.should.have.property('type', 'GhostTag');
+                getArg(1).internal.should.have.property('type', 'GhostPost');
                 getArg(2).internal.should.have.property('type', 'GhostTag');
-                getArg(3).internal.should.have.property('type', 'GhostAuthor');
+                getArg(3).internal.should.have.property('type', 'GhostTag');
                 getArg(4).internal.should.have.property('type', 'GhostAuthor');
-                getArg(5).internal.should.have.property('type', 'GhostPage');
+                getArg(5).internal.should.have.property('type', 'GhostAuthor');
 
                 done();
             })

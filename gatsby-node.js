@@ -1,30 +1,38 @@
 const GhostAPI = require('./api');
-const {PostNode, PageNode, TagNode, AuthorNode} = require('./nodes');
+const {createNodeFactories} = require('./nodes');
+const {getImagesFromApiResults} = require('./lib');
 
-exports.sourceNodes = ({boundActionCreators}, configOptions) => {
-    const {createNode} = boundActionCreators;
+exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOptions) => {
+    const {createNode, touchNode} = actions;
+    const imageArgs = {createNode, createNodeId, touchNode, store, cache};
 
-    return GhostAPI
-        .fetchAllPosts(configOptions)
-        .then((posts) => {
-            posts.forEach((post) => {
-                if (post.page) {
-                    createNode(PageNode(post));
-                } else {
-                    createNode(PostNode(post));
-                }
+    const [posts, tags, users] = await Promise.all([
+        GhostAPI.fetchAllPosts(configOptions),
+        GhostAPI.fetchAllTags(configOptions),
+        GhostAPI.fetchAllUsers(configOptions)
+    ]);
 
-                if (post.tags) {
-                    post.tags.forEach((tag) => {
-                        createNode(TagNode(tag));
-                    });
-                }
+    const {
+        buildPostNode,
+        buildTagNode,
+        buildAuthorNode,
+        buildMediaNode
+    } = createNodeFactories({posts, tags, users}, imageArgs);
 
-                if (post.authors) {
-                    post.authors.forEach((author) => {
-                        createNode(AuthorNode(author));
-                    });
-                }
-            });
-        });
+    for (const post of posts) {
+        createNode(await buildPostNode(post));
+    }
+
+    for (const tag of tags) {
+        createNode(buildTagNode(tag));
+    }
+
+    for (const user of users) {
+        createNode(buildAuthorNode(user));
+    }
+
+    const images = getImagesFromApiResults([posts, tags, users]);
+    for (const image of images) {
+        createNode(await buildMediaNode(image));
+    }
 };
