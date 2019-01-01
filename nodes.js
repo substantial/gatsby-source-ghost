@@ -2,10 +2,7 @@ const createNodeHelpers = require('gatsby-node-helpers').default;
 const {createRemoteFileNode} = require('gatsby-source-filesystem');
 
 const TYPE_PREFIX = 'Ghost';
-const {
-    createNodeFactory,
-    generateNodeId
-} = createNodeHelpers({
+const {createNodeFactory, generateNodeId} = createNodeHelpers({
     typePrefix: TYPE_PREFIX
 });
 
@@ -16,7 +13,7 @@ const MEDIA = 'Media';
 
 async function downloadImageAndCreateFileNode(
     {url},
-    {createNode, createNodeId, touchNode, store, cache},
+    {createNode, createNodeId, touchNode, store, cache}
 ) {
     let fileNodeID;
 
@@ -45,7 +42,8 @@ async function downloadImageAndCreateFileNode(
 }
 
 function mapPostToTags(post, tags) {
-    const postHasTags = post.tags && Array.isArray(post.tags) && post.tags.length;
+    const postHasTags =
+        post.tags && Array.isArray(post.tags) && post.tags.length;
 
     if (postHasTags) {
         // replace tags with links to their nodes
@@ -71,11 +69,13 @@ function mapPostToTags(post, tags) {
 }
 
 function mapPostToUsers(post, users) {
-    const postHasAuthors = post.authors && Array.isArray(post.authors) && post.authors.length;
+    const postHasAuthors =
+        post.authors && Array.isArray(post.authors) && post.authors.length;
 
     if (postHasAuthors) {
         // replace authors with links to their (user) nodes
-        post.authors___NODE = post.authors.map(a => generateNodeId(AUTHOR, a.id));
+        post.authors___NODE = post.authors.map(a => generateNodeId(AUTHOR, a.id)
+        );
 
         // add a backreference for this post to the user
         post.authors.forEach(({id: authorId}) => {
@@ -88,7 +88,10 @@ function mapPostToUsers(post, users) {
 
         // replace primary_author with a link to the user node
         if (post.primary_author) {
-            post.primary_author___NODE = generateNodeId(AUTHOR, post.primary_author.id);
+            post.primary_author___NODE = generateNodeId(
+                AUTHOR,
+                post.primary_author.id
+            );
         }
 
         delete post.authors;
@@ -110,6 +113,16 @@ async function mapImagesToMedia(node) {
     if (node.cover_image) {
         node.cover_image___NODE = generateNodeId(MEDIA, node.cover_image);
         delete node.cover_image;
+    }
+
+    if (node.og_image) {
+        node.og_image___NODE = generateNodeId(MEDIA, node.og_image);
+        delete node.og_image;
+    }
+
+    if (node.twitter_image) {
+        node.twitter_image___NODE = generateNodeId(MEDIA, node.twitter_image);
+        delete node.twitter_image;
     }
 }
 
