@@ -126,6 +126,20 @@ async function mapImagesToMedia(node) {
     }
 }
 
+function addPostCountToTag(tag, posts) {
+    tag.postCount = posts.reduce((acc, post) => {
+        const postHasTag = post.tags && !!post.tags.find(pt => tag.ghostId === pt.id);
+        return postHasTag ? acc + 1 : acc;
+    }, 0);
+}
+
+function addPostCountToAuthor(author, posts) {
+    author.postCount = posts.reduce((acc, post) => {
+        const postHasAuthor = post.authors && !!post.authors.find(pa => author.ghostId === pa.id);
+        return postHasAuthor ? acc + 1 : acc;
+    }, 0);
+}
+
 async function createLocalFileFromMedia(node, imageArgs) {
     node.localFile___NODE = await downloadImageAndCreateFileNode(
         {url: node.src.split('?')[0]},
@@ -133,7 +147,7 @@ async function createLocalFileFromMedia(node, imageArgs) {
     );
 }
 
-module.exports.createNodeFactories = ({tags, users}, imageArgs) => {
+module.exports.createNodeFactories = ({posts, tags, users}, imageArgs) => {
     const postNodeMiddleware = (node) => {
         mapPostToTags(node, tags);
         mapPostToUsers(node, users);
@@ -142,11 +156,13 @@ module.exports.createNodeFactories = ({tags, users}, imageArgs) => {
     };
 
     const tagNodeMiddleware = (node) => {
+        addPostCountToTag(node, posts);
         mapImagesToMedia(node);
         return node;
     };
 
     const authorNodeMiddleware = (node) => {
+        addPostCountToAuthor(node, posts);
         mapImagesToMedia(node);
         return node;
     };

@@ -17,23 +17,23 @@ describe('Basic Functionality ', function () {
         // Pass in some fake data
         sinon.stub(GhostAPI, 'fetchAllPosts').resolves([
             {slug: 'welcome-to-ghost', page: false, tags: [
-                {slug: 'getting-started'},
-                {slug: 'hash-feature-img'}
+                {slug: 'getting-started', id: '1'},
+                {slug: 'hash-feature-img', id: '2'}
             ], authors: [
-                {name: 'Ghost Writer'},
-                {name: 'Ghost Author'}
+                {name: 'Ghost Writer', id: '1'},
+                {name: 'Ghost Author', id: '2'}
             ]},
             {slug: 'about', page: true}
         ]);
 
         sinon.stub(GhostAPI, 'fetchAllTags').resolves([
-            {slug: 'getting-started'},
-            {slug: 'hash-feature-img'}
+            {slug: 'getting-started', id: '1'},
+            {slug: 'hash-feature-img', id: '2'}
         ]);
 
         sinon.stub(GhostAPI, 'fetchAllUsers').resolves([
-            {name: 'Ghost Writer'},
-            {name: 'Ghost Author'}
+            {name: 'Ghost Writer', id: '1'},
+            {name: 'Ghost Author', id: '2'}
         ]);
 
         gatsbyNode
