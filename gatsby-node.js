@@ -1,4 +1,4 @@
-const GhostAPI = require('./api');
+const GhostContentAPI = require('@tryghost/content-api');
 const {createNodeFactories} = require('./nodes');
 const {getImagesFromApiResults} = require('./lib');
 
@@ -6,21 +6,44 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
     const {createNode, touchNode} = actions;
     const imageArgs = {createNode, createNodeId, touchNode, store, cache};
 
-    const [posts, tags, users] = await Promise.all([
-        GhostAPI.fetchAllPosts(configOptions),
-        GhostAPI.fetchAllTags(configOptions),
-        GhostAPI.fetchAllUsers(configOptions)
+    const api = new GhostContentAPI({
+        host: configOptions.apiUrl,
+        key: configOptions.contentApiKey,
+        version: 'v2'
+    });
+
+    const postAndPageFetchOptions = {
+        limit: 'all',
+        include: 'tags,authors',
+        formats: 'html,plaintext'
+    };
+
+    const tagAndAuthorFetchOptions = {
+        limit: 'all',
+        include: 'count.posts,count.pages'
+    };
+
+    const [posts, pages, tags, users] = await Promise.all([
+        api.posts.browse(postAndPageFetchOptions),
+        api.pages.browse(postAndPageFetchOptions),
+        api.tags.browse(tagAndAuthorFetchOptions),
+        api.authors.browse(tagAndAuthorFetchOptions)
     ]);
 
     const {
         buildPostNode,
+        buildPageNode,
         buildTagNode,
         buildAuthorNode,
         buildMediaNode
-    } = createNodeFactories({posts, tags, users}, imageArgs);
+    } = createNodeFactories({posts, pages, tags, users}, imageArgs);
 
     for (const post of posts) {
         createNode(await buildPostNode(post));
+    }
+
+    for (const page of pages) {
+        createNode(await buildPageNode(page));
     }
 
     for (const tag of tags) {
@@ -31,7 +54,7 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         createNode(buildAuthorNode(user));
     }
 
-    const images = getImagesFromApiResults([posts, tags, users]);
+    const images = getImagesFromApiResults([posts, pages, tags, users]);
     for (const image of images) {
         createNode(await buildMediaNode(image));
     }
