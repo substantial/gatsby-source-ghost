@@ -38,6 +38,11 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         buildMediaNode
     } = createNodeFactories({posts, pages, tags, users}, imageArgs);
 
+    const images = getImagesFromApiResults([posts, pages, tags, users]);
+    for (const image of images) {
+        createNode(await buildMediaNode(image));
+    }
+
     for (const post of posts) {
         createNode(await buildPostNode(post));
     }
@@ -52,10 +57,5 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
 
     for (const user of users) {
         createNode(buildAuthorNode(user));
-    }
-
-    const images = getImagesFromApiResults([posts, pages, tags, users]);
-    for (const image of images) {
-        createNode(await buildMediaNode(image));
     }
 };
