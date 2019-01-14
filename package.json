@@ -1,6 +1,6 @@
 {
   "name": "gatsby-source-ghost",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Gatsby source plugin for building websites using the Ghost API as a data source.",
   "repository": "git@github.com:TryGhost/gatsby-plugin-ghost.git",
   "author": "Ghost Foundation",
@@ -28,7 +28,7 @@
     "sinon": "6.1.5"
   },
   "dependencies": {
-    "@tryghost/content-api": "^0.3.2",
+    "@tryghost/content-api": "0.3.3",
     "bluebird": "^3.5.1",
     "gatsby-node-helpers": "^0.3.0",
     "gatsby-source-filesystem": "^2.0.0",
