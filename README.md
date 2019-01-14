@@ -1,6 +1,6 @@
 # Gatsby Source Ghost
 
-Source plugin for pulling data into Gatsby.js from the [Ghost Public API](https://api.ghost.org).
+Source plugin for pulling data into Gatsby.js from the [Ghost Public API](https://docs.ghost.org/api/).
 
 ## Install
 
@@ -15,28 +15,24 @@ You need to specify three properties in your `gatsby-config.js`:
    resolve: `gatsby-source-ghost`,
    options: {
        apiUrl: `https://<your-subdomain>.ghost.io`,
-       clientId: `ghost-frontend`,
-       clientSecret: `<your client secret>`
+       contentApiKey: `<your content api key>`
    }
 }
 ```
 
-`apiUrl`  
+`apiUrl`
  The admin or API URL for your Ghost site. For Ghost(Pro) customers this is your `.ghost.io` domain. For self hosters it is your main domain unless you have a separate `admin` url configured. Note that this URL should be served over HTTPS.
- 
-`clientId`  
-This is almost always `ghost-frontend`, unless you have a custom client, which is not _yet_ fully supported by Ghost.
 
-`clientSecret`  
-The `secret` for the `ghost-frontend` client, which can be found just above the `</head>` tag on any page on your Ghost site.
+`contentApiKey`
+The "Content API Key" copied from the "Integrations" screen in Ghost Admin.
 
 
 ## How to query
 
-There are 4 node types available from Ghost: Post, Page, Author and Tag.
-                       
-Documentation for the full set of fields made available for each resource type can be found in the [Public API docs](https://api.ghost.org/docs/post).
- 
+There are 5 node types available from Ghost: Post, Page, Author, Tag, and Settings.
+
+Documentation for the full set of fields made available for each resource type can be found in the [Content API docs](https://docs.ghost.org/api/content/).
+
 Posts and Pages have the same properties.
 
 You can query Post nodes created from Ghost like the following:
@@ -66,7 +62,7 @@ You can query Post nodes created from Ghost like the following:
           id
           slug
           ...
-        }       
+        }
       }
     }
   }
@@ -77,7 +73,7 @@ A common but tricky example of filtering posts by tag, can be achieved like this
 
 ```
 {
-  allGhostPost(filter: {tags: {elemMatch {slug: {eq: $slug}}}}) {
+  allGhostPost(filter: {tags: {elemMatch: {slug: {eq: $slug}}}}) {
     edges {
       node {
         slug
@@ -140,8 +136,25 @@ You can query Author nodes created from Ghost like the following:
 }
 ```
 
+You can query the Settings node created from Ghost like the following:
+
+```
+{
+  allGhostSettings {
+    edges {
+      node {
+        title
+        description
+        lang
+        ...
+      }
+    }
+  }
+}
+```
+
 
 
 # Copyright & License
 
-Copyright (c) 2018 Ghost Foundation - Released under the [MIT license](LICENSE).
+Copyright (c) 2018-2019 Ghost Foundation - Released under the [MIT license](LICENSE).

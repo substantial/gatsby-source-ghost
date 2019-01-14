@@ -7,8 +7,10 @@ const {createNodeFactory, generateNodeId} = createNodeHelpers({
 });
 
 const POST = 'Post';
+const PAGE = 'Page';
 const TAG = 'Tag';
 const AUTHOR = 'Author';
+const SETTINGS = 'Settings';
 const MEDIA = 'Media';
 
 async function downloadImageAndCreateFileNode(
@@ -68,6 +70,33 @@ function mapPostToTags(post, tags) {
     }
 }
 
+function mapPageToTags(page, tags) {
+    const pageHasTags =
+        page.tags && Array.isArray(page.tags) && page.tags.length;
+
+    if (pageHasTags) {
+        // replace tags with links to their nodes
+        page.tags___NODE = page.tags.map(t => generateNodeId(TAG, t.id));
+
+        // add a backreference for this post to the tags
+        page.tags.forEach(({id: tagId}) => {
+            const tag = tags.find(t => t.id === tagId);
+            if (!tag.pages___NODE) {
+                tag.pages___NODE = [];
+            }
+            tag.pages___NODE.push(page.id);
+        });
+
+        // replace primary_tag with a link to the tag node
+        if (page.primary_tag) {
+            page.primary_tag___NODE = generateNodeId(TAG, page.primary_tag.id);
+        }
+
+        delete page.tags;
+        delete page.primary_tag;
+    }
+}
+
 function mapPostToUsers(post, users) {
     const postHasAuthors =
         post.authors && Array.isArray(post.authors) && post.authors.length;
@@ -99,6 +128,37 @@ function mapPostToUsers(post, users) {
     }
 }
 
+function mapPageToUsers(page, users) {
+    const pageHasAuthors =
+        page.authors && Array.isArray(page.authors) && page.authors.length;
+
+    if (pageHasAuthors) {
+        // replace authors with links to their (user) nodes
+        page.authors___NODE = page.authors.map(a => generateNodeId(AUTHOR, a.id)
+        );
+
+        // add a backreference for this post to the user
+        page.authors.forEach(({id: authorId}) => {
+            const user = users.find(u => u.id === authorId);
+            if (!user.pages___NODE) {
+                user.pages___NODE = [];
+            }
+            user.pages___NODE.push(page.id);
+        });
+
+        // replace primary_author with a link to the user node
+        if (page.primary_author) {
+            page.primary_author___NODE = generateNodeId(
+                AUTHOR,
+                page.primary_author.id
+            );
+        }
+
+        delete page.authors;
+        delete page.primary_author;
+    }
+}
+
 async function mapImagesToMedia(node) {
     if (node.feature_image) {
         node.feature_image___NODE = generateNodeId(MEDIA, node.feature_image);
@@ -126,6 +186,20 @@ async function mapImagesToMedia(node) {
     }
 }
 
+function addPostCountToTag(tag, posts) {
+    tag.postCount = posts.reduce((acc, post) => {
+        const postHasTag = post.tags && !!post.tags.find(pt => tag.ghostId === pt.id);
+        return postHasTag ? acc + 1 : acc;
+    }, 0);
+}
+
+function addPostCountToAuthor(author, posts) {
+    author.postCount = posts.reduce((acc, post) => {
+        const postHasAuthor = post.authors && !!post.authors.find(pa => author.ghostId === pa.id);
+        return postHasAuthor ? acc + 1 : acc;
+    }, 0);
+}
+
 async function createLocalFileFromMedia(node, imageArgs) {
     node.localFile___NODE = await downloadImageAndCreateFileNode(
         {url: node.src.split('?')[0]},
@@ -133,7 +207,7 @@ async function createLocalFileFromMedia(node, imageArgs) {
     );
 }
 
-module.exports.createNodeFactories = ({tags, users}, imageArgs) => {
+module.exports.createNodeFactories = ({posts, tags, users}, imageArgs) => {
     const postNodeMiddleware = (node) => {
         mapPostToTags(node, tags);
         mapPostToUsers(node, users);
@@ -141,12 +215,21 @@ module.exports.createNodeFactories = ({tags, users}, imageArgs) => {
         return node;
     };
 
+    const pageNodeMiddleware = (node) => {
+        mapPageToTags(node, tags);
+        mapPageToUsers(node, users);
+        mapImagesToMedia(node);
+        return node;
+    };
+
     const tagNodeMiddleware = (node) => {
+        addPostCountToTag(node, posts);
         mapImagesToMedia(node);
         return node;
     };
 
     const authorNodeMiddleware = (node) => {
+        addPostCountToAuthor(node, posts);
         mapImagesToMedia(node);
         return node;
     };
@@ -157,14 +240,18 @@ module.exports.createNodeFactories = ({tags, users}, imageArgs) => {
     };
 
     const buildPostNode = createNodeFactory(POST, postNodeMiddleware);
+    const buildPageNode = createNodeFactory(PAGE, pageNodeMiddleware);
     const buildTagNode = createNodeFactory(TAG, tagNodeMiddleware);
     const buildAuthorNode = createNodeFactory(AUTHOR, authorNodeMiddleware);
+    const buildSettingsNode = createNodeFactory(SETTINGS);
     const buildMediaNode = createNodeFactory(MEDIA, mediaNodeMiddleware);
 
     return {
         buildPostNode,
+        buildPageNode,
         buildTagNode,
         buildAuthorNode,
+        buildSettingsNode,
         buildMediaNode
     };
 };
