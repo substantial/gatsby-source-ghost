@@ -23,11 +23,12 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         include: 'count.posts,count.pages'
     };
 
-    const [posts, pages, tags, users] = await Promise.all([
+    const [posts, pages, tags, users, settings] = await Promise.all([
         api.posts.browse(postAndPageFetchOptions),
         api.pages.browse(postAndPageFetchOptions),
         api.tags.browse(tagAndAuthorFetchOptions),
-        api.authors.browse(tagAndAuthorFetchOptions)
+        api.authors.browse(tagAndAuthorFetchOptions),
+        api.settings.browse()
     ]);
 
     const {
@@ -35,6 +36,7 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         buildPageNode,
         buildTagNode,
         buildAuthorNode,
+        buildSettingsNode,
         buildMediaNode
     } = createNodeFactories({posts, pages, tags, users}, imageArgs);
 
@@ -58,4 +60,6 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
     for (const user of users) {
         createNode(buildAuthorNode(user));
     }
+
+    createNode(buildSettingsNode(settings));
 };

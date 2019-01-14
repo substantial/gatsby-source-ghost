@@ -10,6 +10,7 @@ const POST = 'Post';
 const PAGE = 'Page';
 const TAG = 'Tag';
 const AUTHOR = 'Author';
+const SETTINGS = 'Settings';
 const MEDIA = 'Media';
 
 async function downloadImageAndCreateFileNode(
@@ -242,6 +243,7 @@ module.exports.createNodeFactories = ({posts, tags, users}, imageArgs) => {
     const buildPageNode = createNodeFactory(PAGE, pageNodeMiddleware);
     const buildTagNode = createNodeFactory(TAG, tagNodeMiddleware);
     const buildAuthorNode = createNodeFactory(AUTHOR, authorNodeMiddleware);
+    const buildSettingsNode = createNodeFactory(SETTINGS);
     const buildMediaNode = createNodeFactory(MEDIA, mediaNodeMiddleware);
 
     return {
@@ -249,6 +251,7 @@ module.exports.createNodeFactories = ({posts, tags, users}, imageArgs) => {
         buildPageNode,
         buildTagNode,
         buildAuthorNode,
+        buildSettingsNode,
         buildMediaNode
     };
 };
