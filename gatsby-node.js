@@ -32,34 +32,34 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
     ]);
 
     const {
-        buildPostNode,
-        buildPageNode,
-        buildTagNode,
-        buildAuthorNode,
-        buildSettingsNode,
-        buildMediaNode
+        PostNode,
+        PageNode,
+        TagNode,
+        AuthorNode,
+        SettingsNode,
+        MediaNode
     } = createNodeFactories({posts, pages, tags, users}, imageArgs);
 
     const images = getImagesFromApiResults([posts, pages, tags, users]);
     for (const image of images) {
-        createNode(await buildMediaNode(image));
+        createNode(await MediaNode(image));
     }
 
     for (const post of posts) {
-        createNode(await buildPostNode(post));
+        createNode(await PostNode(post));
     }
 
     for (const page of pages) {
-        createNode(await buildPageNode(page));
+        createNode(await PageNode(page));
     }
 
     for (const tag of tags) {
-        createNode(buildTagNode(tag));
+        createNode(TagNode(tag));
     }
 
     for (const user of users) {
-        createNode(buildAuthorNode(user));
+        createNode(AuthorNode(user));
     }
 
-    createNode(buildSettingsNode(settings));
+    createNode(SettingsNode(settings));
 };

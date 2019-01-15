@@ -241,19 +241,19 @@ module.exports.createNodeFactories = ({posts, tags, users}, imageArgs) => {
         return node;
     };
 
-    const buildPostNode = createNodeFactory(POST, postNodeMiddleware);
-    const buildPageNode = createNodeFactory(PAGE, pageNodeMiddleware);
-    const buildTagNode = createNodeFactory(TAG, tagNodeMiddleware);
-    const buildAuthorNode = createNodeFactory(AUTHOR, authorNodeMiddleware);
-    const buildSettingsNode = createNodeFactory(SETTINGS);
-    const buildMediaNode = createNodeFactory(MEDIA, mediaNodeMiddleware);
+    const PostNode = createNodeFactory(POST, postNodeMiddleware);
+    const PageNode = createNodeFactory(PAGE, pageNodeMiddleware);
+    const TagNode = createNodeFactory(TAG, tagNodeMiddleware);
+    const AuthorNode = createNodeFactory(AUTHOR, authorNodeMiddleware);
+    const SettingsNode = createNodeFactory(SETTINGS);
+    const MediaNode = createNodeFactory(MEDIA, mediaNodeMiddleware);
 
     return {
-        buildPostNode,
-        buildPageNode,
-        buildTagNode,
-        buildAuthorNode,
-        buildSettingsNode,
-        buildMediaNode
+        PostNode,
+        PageNode,
+        TagNode,
+        AuthorNode,
+        SettingsNode,
+        MediaNode
     };
 };
