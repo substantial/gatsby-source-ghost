@@ -98,6 +98,7 @@ exports.sourceNodes = async ({emitter, actions, createNodeId, store, cache}, con
         createNode(AuthorNode(author));
     }
 
+    // The settings object doesn't have an id, prevent Gatsby from getting 'undefined'
     settings.id = 1;
     createNode(SettingsNode(settings));
 };
