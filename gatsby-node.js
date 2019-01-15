@@ -23,7 +23,7 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         include: 'count.posts,count.pages'
     };
 
-    const [posts, pages, tags, users, settings] = await Promise.all([
+    const [posts, pages, tags, authors, settings] = await Promise.all([
         api.posts.browse(postAndPageFetchOptions),
         api.pages.browse(postAndPageFetchOptions),
         api.tags.browse(tagAndAuthorFetchOptions),
@@ -38,9 +38,9 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         AuthorNode,
         SettingsNode,
         MediaNode
-    } = createNodeFactories({posts, pages, tags, users}, imageArgs);
+    } = createNodeFactories({posts, pages, tags, authors}, imageArgs);
 
-    const images = getImagesFromApiResults([posts, pages, tags, users]);
+    const images = getImagesFromApiResults([posts, pages, tags, authors]);
     for (const image of images) {
         createNode(await MediaNode(image));
     }
@@ -57,8 +57,8 @@ exports.sourceNodes = async ({actions, createNodeId, store, cache}, configOption
         createNode(TagNode(tag));
     }
 
-    for (const user of users) {
-        createNode(AuthorNode(user));
+    for (const author of authors) {
+        createNode(AuthorNode(author));
     }
 
     createNode(SettingsNode(settings));

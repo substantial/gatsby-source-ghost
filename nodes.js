@@ -97,25 +97,24 @@ function mapPageToTags(page, tags) {
     }
 }
 
-function mapPostToUsers(post, users) {
+function mapPostToAuthors(post, authors) {
     const postHasAuthors =
         post.authors && Array.isArray(post.authors) && post.authors.length;
 
     if (postHasAuthors) {
-        // replace authors with links to their (user) nodes
-        post.authors___NODE = post.authors.map(a => generateNodeId(AUTHOR, a.id)
-        );
+        // replace authors with links to their nodes
+        post.authors___NODE = post.authors.map(a => generateNodeId(AUTHOR, a.id));
 
-        // add a backreference for this post to the user
+        // add a backreference for this post to the author
         post.authors.forEach(({id: authorId}) => {
-            const user = users.find(u => u.id === authorId);
-            if (!user.posts___NODE) {
-                user.posts___NODE = [];
+            const author = authors.find(u => u.id === authorId);
+            if (!author.posts___NODE) {
+                author.posts___NODE = [];
             }
-            user.posts___NODE.push(post.id);
+            author.posts___NODE.push(post.id);
         });
 
-        // replace primary_author with a link to the user node
+        // replace primary_author with a link to the author node
         if (post.primary_author) {
             post.primary_author___NODE = generateNodeId(
                 AUTHOR,
@@ -128,25 +127,24 @@ function mapPostToUsers(post, users) {
     }
 }
 
-function mapPageToUsers(page, users) {
+function mapPageToAuthors(page, authors) {
     const pageHasAuthors =
         page.authors && Array.isArray(page.authors) && page.authors.length;
 
     if (pageHasAuthors) {
-        // replace authors with links to their (user) nodes
-        page.authors___NODE = page.authors.map(a => generateNodeId(AUTHOR, a.id)
-        );
+        // replace authors with links to their nodes
+        page.authors___NODE = page.authors.map(a => generateNodeId(AUTHOR, a.id));
 
-        // add a backreference for this post to the user
+        // add a backreference for this post to the author
         page.authors.forEach(({id: authorId}) => {
-            const user = users.find(u => u.id === authorId);
-            if (!user.pages___NODE) {
-                user.pages___NODE = [];
+            const author = authors.find(u => u.id === authorId);
+            if (!author.pages___NODE) {
+                author.pages___NODE = [];
             }
-            user.pages___NODE.push(page.id);
+            author.pages___NODE.push(page.id);
         });
 
-        // replace primary_author with a link to the user node
+        // replace primary_author with a link to the author node
         if (page.primary_author) {
             page.primary_author___NODE = generateNodeId(
                 AUTHOR,
@@ -209,17 +207,17 @@ async function createLocalFileFromMedia(node, imageArgs) {
     );
 }
 
-module.exports.createNodeFactories = ({posts, tags, users}, imageArgs) => {
+module.exports.createNodeFactories = ({posts, tags, authors}, imageArgs) => {
     const postNodeMiddleware = (node) => {
         mapPostToTags(node, tags);
-        mapPostToUsers(node, users);
+        mapPostToAuthors(node, authors);
         mapImagesToMedia(node);
         return node;
     };
 
     const pageNodeMiddleware = (node) => {
         mapPageToTags(node, tags);
-        mapPageToUsers(node, users);
+        mapPageToAuthors(node, authors);
         mapImagesToMedia(node);
         return node;
     };
