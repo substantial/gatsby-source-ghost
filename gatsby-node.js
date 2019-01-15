@@ -63,7 +63,7 @@ exports.sourceNodes = async ({emitter, actions, createNodeId, store, cache}, con
 
     const tagAndAuthorFetchOptions = {
         limit: 'all',
-        include: 'count.posts,count.pages'
+        include: 'count.posts'
     };
 
     const [posts, pages, tags, authors, settings] = await Promise.all([
