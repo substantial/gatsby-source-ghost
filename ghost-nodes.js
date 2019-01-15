@@ -80,6 +80,9 @@ function mapPageToTags(page, tags) {
 
         // add a backreference for this post to the tags
         page.tags.forEach(({id: tagId}) => {
+            // If you've come here because your test is failing then you
+            // probably need to fix your test data. `tag` will never be
+            // undefined if your data is correct.
             const tag = tags.find(t => t.id === tagId);
             if (!tag.pages___NODE) {
                 tag.pages___NODE = [];
@@ -207,7 +210,7 @@ async function createLocalFileFromMedia(node, imageArgs) {
     );
 }
 
-module.exports.createNodeFactories = ({posts, tags, authors}, imageArgs) => {
+const createFactoryMiddleware = ({posts, tags, authors}, imageArgs) => {
     const postNodeMiddleware = (node) => {
         mapPostToTags(node, tags);
         mapPostToAuthors(node, authors);
@@ -238,6 +241,24 @@ module.exports.createNodeFactories = ({posts, tags, authors}, imageArgs) => {
         await createLocalFileFromMedia(node, imageArgs);
         return node;
     };
+
+    return {
+        postNodeMiddleware,
+        pageNodeMiddleware,
+        tagNodeMiddleware,
+        authorNodeMiddleware,
+        mediaNodeMiddleware
+    };
+};
+
+module.exports.createNodeFactories = ({posts, tags, authors}, imageArgs) => {
+    const {
+        postNodeMiddleware,
+        pageNodeMiddleware,
+        tagNodeMiddleware,
+        authorNodeMiddleware,
+        mediaNodeMiddleware
+    } = createFactoryMiddleware({posts, tags, authors}, imageArgs);
 
     const PostNode = createNodeFactory(POST, postNodeMiddleware);
     const PageNode = createNodeFactory(PAGE, pageNodeMiddleware);
