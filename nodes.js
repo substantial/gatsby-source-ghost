@@ -191,6 +191,7 @@ function addPostCountToTag(tag, posts) {
         const postHasTag = post.tags && !!post.tags.find(pt => tag.ghostId === pt.id);
         return postHasTag ? acc + 1 : acc;
     }, 0);
+    delete tag.count;
 }
 
 function addPostCountToAuthor(author, posts) {
@@ -198,6 +199,7 @@ function addPostCountToAuthor(author, posts) {
         const postHasAuthor = post.authors && !!post.authors.find(pa => author.ghostId === pa.id);
         return postHasAuthor ? acc + 1 : acc;
     }, 0);
+    delete author.count;
 }
 
 async function createLocalFileFromMedia(node, imageArgs) {
