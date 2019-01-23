@@ -37,5 +37,8 @@
     "bluebird": "^3.5.1",
     "gatsby-node-helpers": "^0.3.0",
     "qs": "^6.5.2"
+  },
+  "peerDependencies": {
+    "gatsby": "^2.0.0"
   }
 }
