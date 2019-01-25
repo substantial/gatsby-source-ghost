@@ -8,7 +8,35 @@ const schema = require('./ghost-schema');
  * Refs: https://github.com/gatsbyjs/gatsby/issues/10856#issuecomment-451701011
  * Ensures that Gatsby knows about every field in the Ghost schema
  */
-const createTemporaryFakeNodes = ({emitter, actions}, fakeNodes) => {
+const createTemporaryFakeNodes = async ({emitter, actions}, imageArgs) => {
+    const {createNode} = actions;
+
+    const {
+        PostNode,
+        PageNode,
+        TagNode,
+        AuthorNode,
+        SettingsNode,
+        MediaNode
+    } = createNodeFactories({
+        posts: [schema.post],
+        tags: [schema.tag],
+        authors: [schema.author]
+    }, imageArgs);
+
+    const images = getImagesFromApiResults([[schema.post], [schema.page], [schema.tag], [schema.author]]);
+    for (const image of images) {
+        createNode(await MediaNode(image));
+    }
+
+    const fakeNodes = [
+        PostNode(schema.post),
+        PageNode(schema.page),
+        TagNode(schema.tag),
+        AuthorNode(schema.author),
+        SettingsNode(schema.settings)
+    ];
+
     // Setup our temporary fake nodes
     fakeNodes.forEach((node) => {
         // createTemporaryFakeNodes is called twice. The second time, the node already has an owner
@@ -34,24 +62,7 @@ exports.sourceNodes = async ({emitter, actions, createNodeId, store, cache}, con
     const imageArgs = {createNode, createNodeId, touchNode, store, cache};
 
     // These temporary nodes ensure that Gatsby knows about every field in the Ghost Schema
-    const tempNodes = createNodeFactories({
-        posts: [schema.post],
-        tags: [schema.tag],
-        authors: [schema.author]
-    }, imageArgs);
-
-    const fakeImages = getImagesFromApiResults([[schema.post], [schema.page], [schema.tag], [schema.author]]);
-    for (const image of fakeImages) {
-        createNode(await tempNodes.MediaNode(image));
-    }
-
-    createTemporaryFakeNodes({emitter, actions}, [
-        tempNodes.PostNode(schema.post),
-        tempNodes.PageNode(schema.page),
-        tempNodes.TagNode(schema.tag),
-        tempNodes.AuthorNode(schema.author),
-        tempNodes.SettingsNode(schema.settings)
-    ]);
+    createTemporaryFakeNodes({emitter, actions}, imageArgs);
 
     const api = ContentAPI.configure(configOptions);
 
@@ -108,23 +119,6 @@ exports.onPreExtractQueries = async ({emitter, actions, createNodeId, store, cac
     const {createNode, touchNode} = actions;
     const imageArgs = {createNode, createNodeId, touchNode, store, cache};
 
-    const {PostNode, PageNode, TagNode, AuthorNode, SettingsNode, MediaNode} = createNodeFactories({
-        posts: [schema.post],
-        tags: [schema.tag],
-        authors: [schema.author]
-    }, imageArgs);
-
-    const images = getImagesFromApiResults([[schema.post], [schema.page], [schema.tag], [schema.author]]);
-    for (const image of images) {
-        createNode(await MediaNode(image));
-    }
-
     // These temporary nodes ensure that Gatsby knows about every field in the Ghost Schema
-    createTemporaryFakeNodes({emitter, actions}, [
-        PostNode(schema.post),
-        PageNode(schema.page),
-        TagNode(schema.tag),
-        AuthorNode(schema.author),
-        SettingsNode(schema.settings)
-    ]);
+    createTemporaryFakeNodes({emitter, actions}, imageArgs);
 };
