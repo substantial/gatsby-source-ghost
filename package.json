@@ -21,7 +21,6 @@
   "devDependencies": {
     "eslint": "5.3.0",
     "eslint-plugin-ghost": "0.0.26",
-    "lodash": "^4.17.11",
     "mocha": "5.2.0",
     "proxyquire": "^2.1.0",
     "should": "13.2.3",
@@ -31,6 +30,7 @@
     "@tryghost/content-api": "1.0.0",
     "bluebird": "^3.5.1",
     "gatsby-node-helpers": "^0.3.0",
+    "gatsby-source-filesystem": "^2.0.0",
     "qs": "^6.5.2"
   }
 }
